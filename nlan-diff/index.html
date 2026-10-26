@@ -1,0 +1,392 @@
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NLAN-Diff</title>
+<meta name="description" content="Exploiting Thermal Self-Similarity for Robust Blind Super-Resolution of Real-World Infrared Images">
+<meta property="og:title" content="NLAN-Diff: Robust Blind Super-Resolution of Real-World Infrared Images">
+<meta property="og:image" content="assets/video/S4_crosswalk_poster.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230f1218'/><rect x='7' y='7' width='18' height='18' fill='none' stroke='%23e8ecf2' stroke-width='2.5'/></svg>">">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css?family=Google+Sans:400,500,600,700|Noto+Sans:400,600,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --fg:#14181f; --muted:#5c6773; --line:#e4e8ee;
+  --accent:#1f6feb; --accent-weak:#eaf1fe; --card:#f7f9fb; --code-bg:#f3f5f8;
+  --maxw:960px;
+}
+:root:not([data-theme="light"]){ }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1218; --fg:#e8ecf2; --muted:#9aa6b4; --line:#242b36;
+    --accent:#5a9bff; --accent-weak:#16233a; --card:#151a22; --code-bg:#11161d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1218; --fg:#e8ecf2; --muted:#9aa6b4; --line:#242b36;
+  --accent:#5a9bff; --accent-weak:#16233a; --card:#151a22; --code-bg:#11161d;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font-family:'Noto Sans',system-ui,-apple-system,sans-serif;
+  font-size:17px; line-height:1.6; letter-spacing:0;
+}
+.wrap{max-width:var(--maxw); margin:0 auto; padding:0 16px}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ---------- header ---------- */
+header{padding:64px 0 30px; text-align:center}
+
+h1{
+  font-family:'Google Sans','Noto Sans',sans-serif;
+  font-size:clamp(1.75rem,3.1vw,2.4rem); font-weight:600; line-height:1.26;
+  margin:0 0 1.3rem; letter-spacing:0;
+  text-wrap:balance;
+}
+.authors{font-family:'Google Sans','Noto Sans',sans-serif; font-size:1.1rem; margin:0 0 8px; font-weight:500}
+.authors a{color:var(--fg)}
+.authors sup{color:var(--accent); font-weight:600}
+.affil{color:var(--muted); font-size:.95rem; margin:0}
+.affil sup{color:var(--accent); font-weight:600}
+
+.links{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:26px}
+.btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:9px 18px; border-radius:999px;
+  background:var(--fg); color:var(--bg);
+  font-size:.95rem; font-weight:600; border:1px solid var(--fg);
+  transition:transform .12s ease, opacity .12s ease;
+}
+.btn:hover{text-decoration:none; transform:translateY(-1px); opacity:.88}
+.btn.ghost{background:transparent; color:var(--fg); border-color:var(--line)}
+.btn.ghost:hover{border-color:var(--muted)}
+.btn[aria-disabled="true"]{opacity:.42; pointer-events:none}
+.btn svg{width:15px; height:15px; fill:currentColor; flex:none}
+
+/* ---------- sections ---------- */
+
+h2{
+  font-family:'Google Sans','Noto Sans',sans-serif;
+  font-size:2rem; font-weight:600; line-height:1.2;
+  margin:0 0 1.4rem; text-align:center; letter-spacing:0;
+}
+.sub{color:var(--muted); font-size:1rem; margin:0 0 26px}
+p.body{max-width:68ch; margin:0 auto 14px; color:var(--fg)}
+section.narrow p.body{text-align:left}
+
+figure{margin:0}
+figure img{width:100%; height:auto; display:block; border-radius:0; border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:.92rem; margin-top:10px; text-align:center}
+
+video{width:100%; height:auto; display:block; border-radius:0; border:1px solid var(--line); background:#000}
+
+/* ---------- comparison slider ---------- */
+
+.cmp{
+  position:relative; width:100%; overflow:hidden; border-radius:0;
+  border:1px solid var(--line); background:var(--card);
+  touch-action:pan-y; cursor:grab; user-select:none; -webkit-user-select:none;
+  aspect-ratio:5/4;
+}
+/* 좌우 열의 높이를 맞추기 위해 컨테이너가 비율을 고정한다 */
+.cmp img{
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  object-fit:cover; display:block; pointer-events:none; -webkit-user-drag:none;
+}
+.cmp.dragging{cursor:grabbing}
+.cmp:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.cmp .handle{
+  position:absolute; top:0; bottom:0; width:2px; background:#fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.35); transform:translateX(-1px); pointer-events:none;
+}
+.cmp .knob{
+  position:absolute; top:50%; left:50%; width:40px; height:40px; margin:-20px 0 0 -20px;
+  border-radius:50%; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.35);
+  display:grid; place-items:center;
+}
+.cmp .knob::before{
+  content:"\25C0\00A0\25B6"; font-size:11px; color:#333; letter-spacing:-1px;
+}
+.cmp .tag{
+  position:absolute; top:12px; padding:4px 11px; border-radius:0;
+  background:rgba(0,0,0,.62); color:#fff; font-size:.82rem; font-weight:600;
+  letter-spacing:.02em; pointer-events:none; backdrop-filter:blur(3px);
+}
+.cmp .tag.l{left:12px}
+.cmp .tag.r{right:12px}
+.cmp .tag{top:10px; font-size:.72rem; padding:3px 9px}
+
+.shot-note b{color:var(--fg); font-weight:600}
+.thumbs{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.thumb{
+  padding:0; border:2px solid transparent; border-radius:0; overflow:hidden;
+  background:none; cursor:pointer; line-height:0; transition:border-color .12s ease, opacity .12s ease;
+  opacity:.62;
+}
+.thumb img{width:100%; aspect-ratio:5/4; object-fit:cover; display:block}
+.thumb:hover{opacity:.9}
+.thumb[aria-current="true"]{border-color:var(--accent); opacity:1}
+.thumb:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+@media (max-width:760px){ .method-figs{grid-template-columns:1fr} }
+
+
+/* ---------- bibtex ---------- */
+pre{
+  background:var(--code-bg); border:1px solid var(--line); border-radius:0;
+  padding:18px; overflow-x:auto; font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:.82rem; line-height:1.6; margin:0;
+}
+footer{padding:40px 0 60px; text-align:center; color:var(--muted); font-size:.92rem}
+
+.theme-toggle{
+  position:fixed; top:14px; right:14px; z-index:20;
+  width:36px; height:36px; border-radius:50%; border:1px solid var(--line);
+  background:var(--bg); color:var(--fg); cursor:pointer; display:grid; place-items:center;
+}
+
+/* ---------- layout for the rewritten page ---------- */
+section{padding:3rem 0}
+section.teaser{padding:34px 0 40px}
+.narrowcol{max-width:960px}
+/* 영상만 본문보다 좌우로 조금 더 나가게 */
+.bleed{margin-inline:-70px}
+@media (max-width:1120px){ .bleed{margin-inline:0} }
+.narrowcol h2{
+  font-family:'Google Sans','Noto Sans',sans-serif;
+  font-size:2rem; font-weight:600; line-height:1.2;
+  margin:0 0 1.4rem; text-align:center; letter-spacing:0;
+}
+.narrowcol h2:first-child{margin-top:0}
+.narrowcol p.body{max-width:none; margin:0 0 1em; text-align:justify}
+.narrowcol figure{margin:6px 0 0}
+.cap{color:var(--muted); font-size:.92rem; text-align:center; margin:10px 0 22px}
+.cap b{color:var(--fg)}
+
+.shot-note b{color:var(--fg); font-weight:600; display:block; margin-bottom:2px}
+.tg:first-child .hint{color:var(--muted); font-size:.9rem; text-align:center; margin:14px 0 0}
+@media (max-width:760px){ .thumb-groups{grid-template-columns:1fr; gap:18px} }
+
+/* ---------- wide two-column teaser ---------- */
+.wrap.wide{max-width:1240px}
+.gcols{
+  display:grid; grid-template-columns:1fr 1fr; column-gap:42px; row-gap:0;
+}
+/* 두 열의 같은 번째 요소를 같은 격자 행에 올려 높이를 강제로 맞춘다 */
+.gcol{display:contents}
+.gcol > *{min-width:0}
+.gcol > :nth-child(1){grid-row:1}
+.gcol > :nth-child(2){grid-row:2}
+.gcol > :nth-child(3){grid-row:3}
+.gcol > :nth-child(4){grid-row:4}
+.gcol > :nth-child(5){grid-row:5}
+.gcol:first-child > *{grid-column:1}
+.gcol:last-child  > *{grid-column:2}
+.gcol{min-width:0}
+.gtitle{
+  font-family:'Google Sans','Noto Sans',sans-serif;
+  font-size:1.35rem; font-weight:600; letter-spacing:0;
+  margin:0 0 .5rem;
+}
+.gcol:first-child .gsub{color:var(--muted); font-size:1.0rem; line-height:1.6; margin:0 0 18px}
+.shot-note{
+  color:var(--muted); font-size:.95rem; line-height:1.6; margin:14px 0 14px;
+}
+.shot-note b{color:var(--fg); font-weight:600; display:block; margin-bottom:2px}
+.thumbs{display:grid; gap:8px}
+.gcol:first-child .thumbs{grid-template-columns:repeat(4,1fr)}
+.gcols .thumbs{align-self:start}
+.gcols .cmp{align-self:start}
+.gcols .gtitle{
+  font-family:'Google Sans','Noto Sans',sans-serif;
+  font-size:1.35rem; font-weight:600; letter-spacing:0;
+  margin:0 0 .5rem;
+}
+.gcol:last-child .thumbs{grid-template-columns:repeat(4,1fr)}
+@media (max-width:900px){
+  .gcols{grid-template-columns:1fr; row-gap:40px}
+  .gcol{display:block}
+  .gcol > *{grid-column:auto !important; grid-row:auto !important}
+}
+.gcol > *{min-width:0}
+.gcol > :nth-child(1){grid-row:1}
+.gcol > :nth-child(2){grid-row:2}
+.gcol > :nth-child(3){grid-row:3}
+.gcol > :nth-child(4){grid-row:4}
+.gcol > :nth-child(5){grid-row:5}
+.gcol:first-child > *{grid-column:1}
+.gcol:last-child  > *{grid-column:2}
+  .gsub,.shot-note{
+  color:var(--muted); font-size:.95rem; line-height:1.6; margin:14px 0 14px;
+}
+}
+</style>
+</head>
+<body>
+<button class="theme-toggle" id="themeBtn" aria-label="Toggle colour theme">&#9681;</button>
+
+<header>
+  <div class="wrap">
+    <h1>Exploiting Thermal Self-Similarity for Robust Blind Super-Resolution of Real-World Infrared Images</h1>
+    <p class="authors">Dongik Lee<sup>1</sup>, Seongryeong Lee<sup>2</sup>, Sungho Kim<sup>1</sup></p>
+    <p class="affil"><sup>1</sup>Yeungnam University &nbsp;&middot;&nbsp; <sup>2</sup>DGIST</p>
+    <nav class="links">
+      <a class="btn" href="assets/paper.pdf">
+        <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6V2zm8 1.5V8h4.5L14 3.5zM8 12h8v1.6H8V12zm0 3.4h8V17H8v-1.6z"/></svg>Paper</a>
+      <a class="btn ghost" href="#" aria-disabled="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2 2 20h20L12 2zm0 4.2 6.5 11.9h-13L12 6.2z"/></svg>arXiv</a>
+      <a class="btn ghost" href="#" aria-disabled="true">
+        <svg viewBox="0 0 24 24"><path d="M12 .5A11.5 11.5 0 0 0 .5 12a11.5 11.5 0 0 0 7.9 10.9c.6.1.8-.2.8-.6v-2c-3.2.7-3.9-1.5-3.9-1.5-.5-1.3-1.3-1.7-1.3-1.7-1-.7.1-.7.1-.7 1.1.1 1.7 1.2 1.7 1.2 1 1.8 2.7 1.3 3.4 1 .1-.8.4-1.3.7-1.6-2.6-.3-5.3-1.3-5.3-5.8 0-1.3.5-2.3 1.2-3.1-.1-.3-.5-1.5.1-3.1 0 0 1-.3 3.3 1.2a11.4 11.4 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.6 1.6.2 2.8.1 3.1.8.8 1.2 1.8 1.2 3.1 0 4.5-2.7 5.5-5.3 5.8.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6A11.5 11.5 0 0 0 23.5 12 11.5 11.5 0 0 0 12 .5z"/></svg>Code</a>
+    </nav>
+  </div>
+</header>
+
+<!-- teaser: interactive comparison, no heading (as in the reference page) -->
+<section class="teaser">
+  <div class="wrap wide">
+    <div class="gcols">
+      <div class="gcol">
+        <div class="gtitle">Real-world scenes</div>
+        <p class="gsub">Real infrared images captured in the wild. No ground truth is available, and the degradations are unseen during training.</p>
+        <div class="cmp" data-gallery="real"></div>
+        <p class="shot-note" data-note="real"></p>
+        <div class="thumbs">
+          <button class="thumb" type="button" data-g="real" data-i="0" title="Palm-lined road"><img src="assets/img/thumb/real_gauss_palm.jpg" alt="Palm-lined road" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="real" data-i="1" title="Crowded pier"><img src="assets/img/thumb/real_gauss_pier.jpg" alt="Crowded pier" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="real" data-i="2" title="Interior wall"><img src="assets/img/thumb/real_stripe_wall.jpg" alt="Interior wall" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="real" data-i="3" title="Metal cylinder"><img src="assets/img/thumb/real_stripe_cyl.jpg" alt="Metal cylinder" loading="lazy"></button>
+        </div>
+      </div>
+      <div class="gcol">
+        <div class="gtitle">Synthetic benchmark</div>
+        <p class="gsub">Held-out images corrupted by our degradation pipeline. Ground truth is available, and every quantitative result is measured here.</p>
+        <div class="cmp" data-gallery="syn"></div>
+        <p class="shot-note" data-note="syn"></p>
+        <div class="thumbs">
+          <button class="thumb" type="button" data-g="syn" data-i="0" title="Shop signage"><img src="assets/img/thumb/synth_flir_a.jpg" alt="Shop signage" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="syn" data-i="1" title="Brick steps"><img src="assets/img/thumb/synth_flir_d.jpg" alt="Brick steps" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="syn" data-i="2" title="Building facade"><img src="assets/img/thumb/synth_flir_b.jpg" alt="Building facade" loading="lazy"></button>
+          <button class="thumb" type="button" data-g="syn" data-i="3" title="Parked scooter"><img src="assets/img/thumb/synth_flir_e.jpg" alt="Parked scooter" loading="lazy"></button>
+        </div>
+      </div>
+    </div>
+    <p class="hint">Drag the handle to compare, or pick another scene below. Left is the degraded input, right is our &times;4 result.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap narrowcol">
+    <h2>Abstract</h2>
+    <div class="bleed"><video src="assets/video/S3_bicycle_sbs.mp4" poster="assets/video/S3_bicycle_poster.jpg" autoplay loop muted playsinline controls></video></div>
+    <p class="cap">Real infrared video at &times;4. Bicubic upsampling (left) against our restoration (right); frames are processed independently.</p>
+    <p class="body">Real infrared sensors do not degrade an image the way a bicubic kernel does. Optical blur from the lens couples with Gaussian read noise, fixed-pattern stripe noise from the readout circuitry, and a low-frequency non-uniformity that drifts as the detector heats up. Which of these dominates, and how strongly, changes with the operating environment and the sensor operating time.</p>
+    <p class="body">Existing infrared super-resolution methods are trained mostly under a single bicubic degradation, or they handle only a subset of these noise types. The degradation they meet in the field is therefore out of distribution, and their output degrades sharply as the real noise grows.</p>
+    <p class="body">Suppressing signal-independent sensor noise without hallucinating detail is fundamentally a problem of averaging several noisy observations of the same signal, which is the principle behind classical non-local means. Thermal scenes are texture-sparse and self-similar, so a given region recurs across the image and those observations are available. Averaging over them removes noise without assuming any fixed noise model, which is what carries the method to degradations it never saw in training.</p>
+    <p class="body">A pretrained generative diffusion prior then takes the clean restoration and adds back the fine texture that heavy degradation had erased. The framework holds up on synthetic benchmarks and on real in-the-wild infrared images, from weak to severe degradation.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap narrowcol">
+    <h2>Method</h2>
+    <figure><img src="assets/img/fig3.jpg" alt="Framework of NLAN-Diff" loading="lazy"></figure>
+    <p class="cap">Framework of NLAN-Diff.</p>
+            <p class="body">We realize non-local means as attention. The Group Attention Block first clusters the tokens by content similarity with a cosine <i>k</i>-means, so that recurring instances of a region are pooled into the same group however far apart they lie in the image. Grouping by content, rather than by a fixed spatial window, is what selects the redundant observations that the averaging then combines.</p>
+    <p class="body">Within a group, attention runs twice. Group cross-attention lets every token read a set of accumulated centers, which places it in a global context, and group self-attention then exchanges information among the tokens of the group itself. That second step is the averaging: independent sensor noise cancels while the structure the tokens share survives. An Overlapping Window Attention Block afterwards restores the local detail that the non-local pass does not cover.</p>
+    <p class="body">The second stage conditions a pretrained diffusion prior on this clean restoration, so it synthesizes texture instead of amplifying noise. The stages are separable: Stage&nbsp;1 alone is fast and faithful, and Stage&nbsp;2 is enabled when perceptual quality outweighs latency.</p>
+
+    <h2>Results</h2>
+    <figure><img src="assets/img/fig6.jpg" alt="Visual results on real infrared images" loading="lazy"></figure>
+    <p class="cap">Real infrared images (&times;4). No ground truth is available for these scenes.</p>
+    <figure><img src="assets/img/fig5.jpg" alt="Visual results on synthetic infrared images" loading="lazy"></figure>
+    <p class="cap">Synthetic benchmark (&times;4), with ground truth for reference.</p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap narrowcol">
+    <h2>BibTeX</h2>
+<pre>@article{lee2026nlandiff,
+  author  = {Lee, Dongik and Lee, Seongryeong and Kim, Sungho},
+  title   = {Exploiting Thermal Self-Similarity for Robust Blind
+             Super-Resolution of Real-World Infrared Images},
+  journal = {IEEE Access},
+  year    = {2026}
+}</pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    If you have any question, please contact us at
+    <a href="mailto:dongik10115959@gmail.com">dongik10115959@gmail.com</a>.<br>
+    This website is licensed under a
+    <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International License</a>.
+    Website adapted from <a href="https://nerfies.github.io/">Nerfies</a>.
+  </div>
+</footer>
+
+<script>
+(function(){
+  var btn=document.getElementById('themeBtn'), saved=null;
+  try{ saved=localStorage.getItem('theme'); }catch(e){}
+  if(saved) document.documentElement.setAttribute('data-theme',saved);
+  btn.addEventListener('click',function(){
+    var cur=document.documentElement.getAttribute('data-theme');
+    if(!cur) cur = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light';
+    var next = cur==='dark' ? 'light':'dark';
+    document.documentElement.setAttribute('data-theme',next);
+    try{ localStorage.setItem('theme',next); }catch(e){}
+  });
+})();
+
+(function(){
+  var GAL = {"real": [{"k": "real_gauss_palm", "t": "Palm-lined road", "n": "Sensor grain is clearest in the flat sky above the treeline."}, {"k": "real_gauss_pier", "t": "Crowded pier", "n": "Grain sits on top of many small, closely spaced targets."}, {"k": "real_stripe_wall", "t": "Interior wall", "n": "A low-contrast frame carrying both Gaussian and stripe noise."}, {"k": "real_stripe_cyl", "t": "Metal cylinder", "n": "Captured with a FLIR Boson 320 uncooled microbolometer. Column-wise fixed-pattern stripes run through the frame."}], "syn": [{"k": "synth_flir_a", "t": "Shop signage", "n": "Blur, column stripes and low-frequency non-uniformity. The characters are illegible in the input."}, {"k": "synth_flir_d", "t": "Brick steps", "n": "Blur with the heaviest Gaussian noise of the four; the mortar lines disappear."}, {"k": "synth_flir_b", "t": "Building facade", "n": "The strongest column stripes of the four, running down the wall."}, {"k": "synth_flir_e", "t": "Parked scooter", "n": "Blur, column stripes and Gaussian noise together."}]};
+  document.querySelectorAll('.cmp[data-gallery]').forEach(function(cmp){
+    var gid=cmp.dataset.gallery, items=GAL[gid];
+    var note=document.querySelector('.shot-note[data-note="'+gid+'"]'),
+        thumbs=Array.prototype.slice.call(document.querySelectorAll('.thumb[data-g="'+gid+'"]')),
+        pos=0.5, dragging=false;
+
+    cmp.innerHTML='<img class="after" alt="Our result">'+
+                  '<img class="before" alt="Degraded input">'+
+                  '<span class="tag l">Input</span><span class="tag r">Ours</span>'+
+                  '<div class="handle"><div class="knob"></div></div>';
+    var afterEl=cmp.querySelector('.after'), beforeEl=cmp.querySelector('.before'),
+        handle=cmp.querySelector('.handle');
+
+    function paint(){
+      beforeEl.style.clipPath='inset(0 '+((1-pos)*100).toFixed(2)+'% 0 0)';
+      handle.style.left=(pos*100).toFixed(2)+'%';
+    }
+    function show(i){
+      var s=items[i];
+      afterEl.src='assets/img/'+s.k+'_ours.jpg';
+      beforeEl.src='assets/img/'+s.k+'_input.jpg';
+      note.innerHTML='<b>'+s.t+'</b> '+s.n;
+      thumbs.forEach(function(b,j){ b.setAttribute('aria-current', j===i?'true':'false'); });
+      pos=0.5; paint();
+    }
+    thumbs.forEach(function(b,i){ b.addEventListener('click',function(){ show(i); }); });
+
+    function toPos(x){ var r=cmp.getBoundingClientRect(); return Math.min(1,Math.max(0,(x-r.left)/r.width)); }
+    cmp.addEventListener('pointerdown',function(e){
+      dragging=true; cmp.classList.add('dragging'); cmp.setPointerCapture(e.pointerId);
+      pos=toPos(e.clientX); paint();
+    });
+    cmp.addEventListener('pointermove',function(e){ if(!dragging) return; e.preventDefault(); pos=toPos(e.clientX); paint(); });
+    function up(){ dragging=false; cmp.classList.remove('dragging'); }
+    cmp.addEventListener('pointerup',up); cmp.addEventListener('pointercancel',up);
+    cmp.tabIndex=0;
+    cmp.addEventListener('keydown',function(e){
+      var st=e.shiftKey?0.1:0.02;
+      if(e.key==='ArrowLeft'){ pos=Math.max(0,pos-st); paint(); e.preventDefault(); }
+      if(e.key==='ArrowRight'){ pos=Math.min(1,pos+st); paint(); e.preventDefault(); }
+    });
+    show(0); addEventListener('resize',paint);
+  });
+})();
+</script>
+</body>
+</html>
